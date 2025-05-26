@@ -13,9 +13,8 @@ remetente = os.getenv('email')
 senha = os.getenv('senha')
 destinatario1 = os.getenv('destinatario1')
 destinatario2 = os.getenv('destinatario2')
-destinatario3 = os.getenv('destinatario3')
 
-lista_destinatarios = [destinatario3]
+lista_destinatarios = [destinatario1, destinatario2]
 
 
 cabecalho = '''
@@ -45,9 +44,10 @@ def rotina_licenca():
     
     global cabecalho
     conteudo_email = ''
-    # Itera sobre cada item dentro da tabela
+    # Faz a tentativa de abrir a lista e iterar sobre os valores dela
     try:
         
+        # Itera sobre cada um dos valores da lista
         for linhas, vencimento in enumerate(df['Vencimento_Licenca']):
             dias = vencimento - today
             nome_licenca = df['Nome_Licenca'].iloc[linhas]
@@ -99,19 +99,20 @@ def rotina_licenca():
             else:
                 raise Exception("ERRO! VALOR NÃO ESPERADO! CONFERIR BASE DE DADOS")
             
-            linhas += 1
     except Exception as e:
         print(e)
     conteudo_email += "</ul>"
     
+    # Soma o conteudo do corpo do e-mail
     conteudo = cabecalho + conteudo_email
     
+    # Chama a função de enviar e-mail
     envia.email_vencimento(remetente, senha, lista_destinatarios, conteudo)
 
-
 # Colocando rotina no arquivo
-schedule.every().day.at("07:30").do(rotina_licenca)
+schedule.every().day.at("14:00").do(rotina_licenca)
 
 while True:
     schedule.run_pending()
-    time.sleep
+    print('Verificando a Hora de envio!')
+    time.sleep(60)
