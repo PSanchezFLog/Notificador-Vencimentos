@@ -3,7 +3,7 @@ import pandas as pd
 import datetime
 from dotenv import load_dotenv
 import os
-import envia_email as envia
+import app.envia_email as envia
 import time
 import schedule
 
