@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Arquivos Docker</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 800px; margin: auto; }
+        h1 { color: #0056b3; text-align: center; margin-bottom: 30px; }
+        ul { list-style: none; padding: 0; }
+        li { margin-bottom: 10px; padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        li:last-child { border-bottom: none; }
+        a { text-decoration: none; color: #007bff; }
+        a:hover { text-decoration: underline; }
+        .file-name { flex-grow: 1; }
+        .action-button { background-color: #28a745; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; margin-left: 5px;}
+        .action-button.edit { background-color: #ffc107; }
+        .action-button.edit:hover { background-color: #e0a800; }
+        .action-button:hover { background-color: #218838; }
+        .messages { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; padding: 10px; border-radius: 5px; margin-bottom: 15px; text-align: center;}
+        .upload-section { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+        input[type="file"] { margin-bottom: 10px; }
+        input[type="submit"] { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; }
+        input[type="submit"]:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gerenciador de Licenças</h1>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <h2>Arquivos CSV:</h2>
+        {% if csv_files %}
+            <ul>
+                {% for file in csv_files %}
+                    <li>
+                        <span class="file-name">{{ file }}</span>
+                        <a href="{{ url_for('edit_csv', filename=file) }}" class="action-button edit">Editar</a>
+                        <a href="{{ url_for('download_file', filename=file) }}" class="action-button">Download</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Nenhum arquivo CSV encontrado.</p>
+        {% endif %}
+
+        <h2>Outros Arquivos:</h2>
+        {% if other_files %}
+            <ul>
+                {% for file in other_files %}
+                    <li>
+                        <span class="file-name">{{ file }}</span>
+                        <a href="{{ url_for('download_file', filename=file) }}" class="action-button">Download</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Nenhum outro arquivo encontrado.</p>
+        {% endif %}
+
+        <h2>Diretórios:</h2>
+        {% if directories %}
+            <ul>
+                {% for directory in directories %}
+                    <li>
+                        <span class="file-name">{{ directory }}</span>
+                        </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Nenhum diretório encontrado.</p>
+        {% endif %}
+
+        <div class="upload-section">
+            <h2>Upload de Arquivos:</h2>
+            <form method="POST" action="{{ url_for('upload_file') }}" enctype="multipart/form-data">
+                <input type="file" name="file">
+                <input type="submit" value="Upload">
+            </form>
+        </div>
+    </div>
+</body>
+</html>

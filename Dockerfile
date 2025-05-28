@@ -1,5 +1,5 @@
 FROM python:3.13.3
 
-RUN pip install pandas dotenv schedule
+RUN pip install pandas dotenv schedule flask
 RUN apt install nano
 COPY . /home

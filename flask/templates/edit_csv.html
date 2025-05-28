@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar CSV: {{ filename }}</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 90%; margin: auto; }
+        h1 { color: #0056b3; text-align: center; margin-bottom: 30px; }
+        .actions-bar { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .back-button, .add-row-button, .save-button {
+            background-color: #6c757d; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; display: inline-block;
+        }
+        .back-button:hover, .add-row-button:hover { background-color: #5a6268; }
+        .save-button { background-color: #28a745; margin-top: 0; width: auto; }
+        .save-button:hover { background-color: #218838; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        td[contenteditable="true"] { background-color: #fffacd; cursor: text; }
+
+        /* Estilo para o botão de remover */
+        .remove-row-button {
+            background-color: #dc3545; /* Cor vermelha para remoção */
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+        .remove-row-button:hover {
+            background-color: #c82333;
+        }
+
+        .status-message { margin-top: 10px; padding: 10px; border-radius: 5px; text-align: center; }
+        .status-message.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status-message.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="actions-bar">
+            <a href="{{ url_for('index') }}" class="back-button">Voltar para Gerenciador</a>
+            <button class="add-row-button" onclick="addRow()">Adicionar Linha</button>
+        </div>
+        <h1>Editar CSV: {{ filename }}</h1>
+
+        <table id="csvTable">
+            <thead>
+                <tr>
+                    {% for header in headers %}
+                        <th>{{ header }}</th>
+                    {% endfor %}
+                    <th>Ações</th> {# Nova coluna para o botão de remover #}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                    <tr>
+                        {% for cell in row %}
+                            <td contenteditable="true">{{ cell }}</td>
+                        {% endfor %}
+                        <td>
+                            <button class="remove-row-button" onclick="removeRow(this)">Remover</button>
+                        </td> {# Botão de remover para cada linha #}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <button class="save-button" onclick="saveCsv()">Salvar</button>
+        <div id="statusMessage" class="status-message" style="display: none;"></div>
+
+    </div>
+
+    <script>
+        function saveCsv() {
+            const table = document.getElementById('csvTable');
+            // Os cabeçalhos agora precisam ignorar a última coluna 'Ações'
+            const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent).slice(0, -1);
+            
+            const rows = table.querySelectorAll('tbody tr');
+            const data = [];
+
+            rows.forEach(row => {
+                // Pega apenas as células de dados, ignorando a última célula de 'Ações'
+                const cells = row.querySelectorAll('td:not(:last-child)'); 
+                const rowData = Array.from(cells).map(cell => cell.textContent);
+                data.push(rowData);
+            });
+
+            const filename = "{{ filename }}";
+            const url = `/save_csv/${filename}`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ headers: headers, data: data })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const statusMessage = document.getElementById('statusMessage');
+                statusMessage.style.display = 'block';
+                if (data.success) {
+                    statusMessage.className = 'status-message success';
+                    statusMessage.textContent = data.message;
+                } else {
+                    statusMessage.className = 'status-message error';
+                    statusMessage.textContent = data.message;
+                }
+                setTimeout(() => {
+                    statusMessage.style.display = 'none';
+                }, 5000);
+            })
+            .catch(error => {
+                const statusMessage = document.getElementById('statusMessage');
+                statusMessage.style.display = 'block';
+                statusMessage.className = 'status-message error';
+                statusMessage.textContent = 'Erro de rede ou servidor: ' + error;
+                setTimeout(() => {
+                    statusMessage.style.display = 'none';
+                }, 5000);
+            });
+        }
+
+        function addRow() {
+            const tableBody = document.getElementById('csvTable').querySelector('tbody');
+            // O número de colunas para dados é headers.length, não th.length (por causa da coluna 'Ações')
+            const numDataColumns = document.getElementById('csvTable').querySelectorAll('thead th').length -1; 
+            const newRow = document.createElement('tr');
+
+            for (let i = 0; i < numDataColumns; i++) {
+                const newCell = document.createElement('td');
+                newCell.contentEditable = "true";
+                newCell.textContent = ""; 
+                newRow.appendChild(newCell);
+            }
+            // Adiciona a célula para o botão de remover na nova linha
+            const removeCell = document.createElement('td');
+            const removeButton = document.createElement('button');
+            removeButton.className = 'remove-row-button';
+            removeButton.textContent = 'Remover';
+            removeButton.onclick = function() { removeRow(this); };
+            removeCell.appendChild(removeButton);
+            newRow.appendChild(removeCell);
+
+            tableBody.appendChild(newRow);
+        }
+
+        // NOVA FUNÇÃO PARA REMOVER LINHA
+        function removeRow(buttonElement) {
+            // Pega o elemento pai do botão (que é a célula <td>)
+            const cell = buttonElement.parentNode;
+            // Pega o elemento pai da célula (que é a linha <tr>)
+            const row = cell.parentNode;
+            // Remove a linha do DOM
+            row.remove();
+            // Nenhuma notificação imediata é necessária, pois a remoção será efetivada no "Salvar"
+        }
+    </script>
+</body>
+</html>
