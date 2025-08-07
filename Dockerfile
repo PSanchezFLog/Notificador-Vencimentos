@@ -1,5 +1,8 @@
-FROM python:3.13.3
+FROM ubuntu:24.04
 
-RUN pip install pandas dotenv schedule flask
-RUN apt install nano
+RUN apt update && apt upgrade -y && \
+    apt install -y nano python3-full python3-pip && \
+    pip3 install --break-system-packages pandas python-dotenv schedule flask
+
+
 COPY . /home

@@ -5,7 +5,7 @@ from flask import Flask, render_template, send_from_directory, request, redirect
 app = Flask(__name__)
 app.secret_key = 'supersecretkey' # MUDE ISSO EM PRODUÇÃO!
 
-FILE_DIRECTORY = './app'
+FILE_DIRECTORY = r'./home/app'
 
 @app.route('/')
 def index():

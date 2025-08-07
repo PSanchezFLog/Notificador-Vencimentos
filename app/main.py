@@ -110,7 +110,7 @@ def rotina_licenca():
     envia.email_vencimento(remetente, senha, lista_destinatarios, conteudo)
 
 # Colocando rotina no arquivo
-schedule.every().day.at("14:00").do(rotina_licenca)
+schedule.every().day.at("07:00").do(rotina_licenca)
 
 while True:
     schedule.run_pending()
